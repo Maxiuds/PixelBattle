@@ -1,8 +1,10 @@
 package pixelbattle.heroes;
 
 import pixelbattle.core.Hero;
+import pixelbattle.core.Fighter;
 import pixelbattle.core.Skill;
 import pixelbattle.core.Target;
+import pixelbattle.core.Ultimate;
 import pixelbattle.engine.Sprite;
 
 /** Лучниця — швидка й спритна. */
@@ -15,15 +17,36 @@ public class Archer extends Hero {
                 user.getName() + " стріляє в " + target.getName() + ": "
                         + target.takeDamage(random(10, 16)) + " шкоди"));
 
-        // TODO 3: вміння «Подвійний постріл» (Target.ENEMY, перезарядка 1) ЛЯМБДОЮ:
-        //   два постріли по random(7, 11); у журнал — сума шкоди.
+        addSkill(new Skill("Подвійний постріл", Target.ENEMY, 1, (user, target) -> {
+            int firstShot = target.takeDamage(random(7, 11));
+            int secondShot = target.takeDamage(random(7, 11));
+            return user.getName() + " робить подвійний постріл по " + target.getName()
+                    + ": " + (firstShot + secondShot) + " шкоди";
+        }));
 
-        // TODO 9: ультимейт «Злива стріл» — АНОНІМНИЙ КЛАС з полем-лічильником:
-        //   кожен живий ворог отримує N стріл по random(4, 8) шкоди,
-        //   де N = 3 при першому використанні, 4 — при другому, 5 — при третьому...
-        //   (лічильник — поле всередині анонімного класу; знадобиться вкладений цикл).
+        setUltimate(new Ultimate() {
+            private int arrowCount = 3;
+
+            @Override public String getName() { return "Злива стріл"; }
+            @Override public String getDescription() { return "Кожне використання випускає на одну стрілу більше"; }
+            @Override public String activate(Fighter user, Fighter[] allies, Fighter[] enemies) {
+                int usedArrows = arrowCount++;
+                int totalDamage = 0;
+                for (Fighter enemy : enemies) {
+                    if (enemy.isAlive()) {
+                        for (int i = 0; i < usedArrows && enemy.isAlive(); i++) {
+                            totalDamage += enemy.takeDamage(Fighter.random(4, 8));
+                        }
+                    }
+                }
+                return user.getName() + " випускає зливу з " + usedArrows
+                        + " стріл по кожному ворогу: " + totalDamage + " шкоди загалом";
+            }
+        });
     }
 
-    // TODO 5: пасивка «Ухилення» — перевизначте modifyIncomingDamage:
-    //   з імовірністю 25% (chance(25)) шкода дорівнює 0, інакше — без змін.
+    @Override
+    protected int modifyIncomingDamage(int damage) {
+        return chance(25) ? 0 : damage;
+    }
 }
