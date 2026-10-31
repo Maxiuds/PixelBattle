@@ -15,6 +15,11 @@ public class Goblin extends Enemy {
                 user.getName() + " б'є кинджалом " + target.getName() + ": "
                         + target.takeDamage(random(8, 12)) + " шкоди"));
 
-        // БОНУС: вміння «Бомба» (перезарядка 3) — 15..22 шкоди та оглушення на 1 хід.
+        addSkill(new Skill("Бомба", Target.ENEMY, 3, (user, target) -> {
+            int damage = target.takeDamage(random(15, 22));
+            target.stun(1);
+            return user.getName() + " кидає бомбу в " + target.getName() + ": "
+                    + damage + " шкоди й оглушення на 1 хід";
+        }));
     }
 }
